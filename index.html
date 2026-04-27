@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="REMIND ME">
+  <title>REMIND ME</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-top">
+      <span class="app-tag">YOUR MEMORY</span>
+      <button class="gcal-btn" id="gcalBtn">
+        <span id="gcalStatus">CONNECT GOOGLE</span>
+      </button>
+    </div>
+    <h1 class="app-title">REMIND<br>ME</h1>
+    <p class="app-subtitle">SPEAK &nbsp;·&nbsp; REMEMBER &nbsp;·&nbsp; DO</p>
+  </header>
+
+  <!-- VOICE SECTION -->
+  <section class="voice-section">
+    <div class="voice-outer-ring">
+      <div class="voice-inner-ring">
+        <button class="voice-btn" id="voiceBtn" aria-label="Hold to speak">
+          <svg class="mic-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="9" y="1" width="6" height="13" rx="3" fill="currentColor"/>
+            <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <p class="voice-label" id="voiceLabel">HOLD TO SPEAK</p>
+    <p class="voice-transcript" id="voiceTranscript"></p>
+
+    <!-- Manual fallback -->
+    <div class="manual-section">
+      <div class="or-divider"><span>OR TYPE IT</span></div>
+      <div class="manual-row">
+        <input
+          type="text"
+          class="manual-input"
+          id="manualInput"
+          placeholder="e.g. Call mom in 2 hours"
+          autocomplete="off"
+          autocorrect="off"
+        >
+        <button class="add-btn" id="addBtn">ADD</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODAY'S REMINDERS -->
+  <section class="reminders-section">
+    <div class="section-header">
+      <h2 class="section-title">TODAY</h2>
+      <span class="section-count" id="todayCount">0 TASKS</span>
+    </div>
+    <div class="reminders-list" id="todayList">
+      <p class="empty-state">No reminders yet. Start speaking.</p>
+    </div>
+  </section>
+
+  <!-- UPCOMING REMINDERS -->
+  <section class="reminders-section">
+    <div class="section-header">
+      <h2 class="section-title">UPCOMING</h2>
+      <span class="section-count" id="upcomingCount">0 TASKS</span>
+    </div>
+    <div class="reminders-list" id="upcomingList">
+      <p class="empty-state">Nothing upcoming.</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <p class="footer-text">REMIND ME &nbsp;·&nbsp; BUILT FOR YOUR BRAIN</p>
+  </footer>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- CONFIRM MODAL (slides up) -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal" id="modal">
+      <p class="modal-eyebrow">I HEARD</p>
+      <h2 class="modal-title" id="modalTitle" contenteditable="true" spellcheck="false"></h2>
+      <div class="modal-field">
+        <label class="modal-label" for="modalTime">WHEN</label>
+        <input type="datetime-local" class="modal-time-input" id="modalTime">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-cancel" id="modalCancel">CANCEL</button>
+        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE REMINDER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google APIs (load after script.js so callbacks are defined) -->
+  <script src="script.js"></script>
+  <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async></script>
+  <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async></script>
+
+</body>
+</html>
