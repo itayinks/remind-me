@@ -3,8 +3,8 @@
 // =============================================
 
 // --- PASTE YOUR CREDENTIALS HERE ---
-const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
-const GOOGLE_API_KEY   = 'YOUR_API_KEY';
+const GOOGLE_CLIENT_ID = '675506173530-dusft5u0aq9fbro2t601hja544ti3kpb.apps.googleusercontent.com';
+const GOOGLE_API_KEY   = 'AIzaSyDr8njd_KNxIqghqTxqheXOCVKmk03dMx4';
 // ------------------------------------
 
 // =============================================
