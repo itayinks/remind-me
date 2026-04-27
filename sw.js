@@ -1,7 +1,7 @@
 // Service Worker — REMIND ME
 // Caches app files so it works offline
 
-const CACHE = 'remind-me-v1';
+const CACHE = 'remind-me-v3';
 const ASSETS = [
   './',
   './index.html',

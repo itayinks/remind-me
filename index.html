@@ -21,7 +21,7 @@
     <div class="install-banner-content">
       <div class="install-steps">
         <span class="install-title">ADD TO YOUR HOME SCREEN</span>
-        <span class="install-step">1 · Tap the <strong>Share</strong> button at the bottom <span class="install-icon">⎙</span></span>
+        <span class="install-step">1 · Tap the <strong>Share</strong> button at the bottom ⎙</span>
         <span class="install-step">2 · Scroll and tap <strong>"Add to Home Screen"</strong></span>
         <span class="install-step">3 · Tap <strong>Add</strong> — done!</span>
       </div>
@@ -33,20 +33,11 @@
   <header class="app-header">
     <div class="header-top">
       <span class="app-tag">YOUR MEMORY</span>
-      <button class="gcal-btn" id="gcalBtn">
-        <span id="gcalStatus">CONNECT GOOGLE CALENDAR</span>
-      </button>
+      <span class="gcal-tag">GOOGLE CALENDAR READY</span>
     </div>
     <h1 class="app-title">REMIND<br>ME</h1>
     <p class="app-subtitle">SPEAK &nbsp;·&nbsp; REMEMBER &nbsp;·&nbsp; DO</p>
   </header>
-
-  <!-- GOOGLE CONNECT NOTICE — shown when not connected -->
-  <div class="gcal-notice" id="gcalNotice">
-    <p class="gcal-notice-text">
-      Tap <strong>CONNECT GOOGLE CALENDAR</strong> above to auto-save reminders to your Google Calendar — you only need to do this once.
-    </p>
-  </div>
 
   <!-- VOICE SECTION -->
   <section class="voice-section">
@@ -117,14 +108,12 @@
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-cancel" id="modalCancel">CANCEL</button>
-        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE REMINDER</button>
+        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE + OPEN GOOGLE</button>
       </div>
     </div>
   </div>
 
   <script src="script.js"></script>
-  <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async></script>
-  <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async></script>
 
 </body>
 </html>
