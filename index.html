@@ -16,13 +16,24 @@
 </head>
 <body>
 
+  <!-- iOS INSTALL BANNER — only shows in Safari before adding to home screen -->
+  <div class="install-banner" id="installBanner" style="display:none;">
+    <div class="install-banner-content">
+      <div class="install-steps">
+        <span class="install-title">ADD TO YOUR HOME SCREEN</span>
+        <span class="install-step">1 · Tap the <strong>Share</strong> button below <span class="install-icon">⎙</span></span>
+        <span class="install-step">2 · Scroll and tap <strong>"Add to Home Screen"</strong></span>
+        <span class="install-step">3 · Tap <strong>Add</strong> — done!</span>
+      </div>
+    </div>
+    <button class="install-dismiss" id="installDismiss">✕</button>
+  </div>
+
   <!-- HEADER -->
   <header class="app-header">
     <div class="header-top">
       <span class="app-tag">YOUR MEMORY</span>
-      <button class="gcal-btn" id="gcalBtn">
-        <span id="gcalStatus">CONNECT GOOGLE</span>
-      </button>
+      <span class="gcal-tag">GOOGLE CALENDAR READY</span>
     </div>
     <h1 class="app-title">REMIND<br>ME</h1>
     <p class="app-subtitle">SPEAK &nbsp;·&nbsp; REMEMBER &nbsp;·&nbsp; DO</p>
@@ -32,7 +43,7 @@
   <section class="voice-section">
     <div class="voice-outer-ring">
       <div class="voice-inner-ring">
-        <button class="voice-btn" id="voiceBtn" aria-label="Hold to speak">
+        <button class="voice-btn" id="voiceBtn" aria-label="Tap to speak">
           <svg class="mic-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="9" y="1" width="6" height="13" rx="3" fill="currentColor"/>
             <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -42,7 +53,7 @@
         </button>
       </div>
     </div>
-    <p class="voice-label" id="voiceLabel">HOLD TO SPEAK</p>
+    <p class="voice-label" id="voiceLabel">TAP TO SPEAK</p>
     <p class="voice-transcript" id="voiceTranscript"></p>
 
     <!-- Manual fallback -->
@@ -69,7 +80,7 @@
       <span class="section-count" id="todayCount">0 TASKS</span>
     </div>
     <div class="reminders-list" id="todayList">
-      <p class="empty-state">No reminders yet. Start speaking.</p>
+      <p class="empty-state">No reminders yet. Tap the mic.</p>
     </div>
   </section>
 
@@ -92,7 +103,7 @@
   <!-- TOAST -->
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- CONFIRM MODAL (slides up) -->
+  <!-- CONFIRM MODAL -->
   <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true">
     <div class="modal" id="modal">
       <p class="modal-eyebrow">I HEARD</p>
@@ -103,15 +114,12 @@
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-cancel" id="modalCancel">CANCEL</button>
-        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE REMINDER</button>
+        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE + OPEN GOOGLE</button>
       </div>
     </div>
   </div>
 
-  <!-- Google APIs (load after script.js so callbacks are defined) -->
   <script src="script.js"></script>
-  <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async></script>
-  <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async></script>
 
 </body>
 </html>
