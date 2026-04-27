@@ -59,6 +59,25 @@
   line-height: 1;
 }
 
+/* Google Calendar connect notice */
+.gcal-notice {
+  background: var(--cream-mid);
+  border-bottom: 1px solid var(--cream-dark);
+  padding: 14px 24px;
+}
+
+.gcal-notice-text {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--brown);
+  line-height: 1.5;
+}
+
+.gcal-notice-text strong {
+  font-weight: 500;
+  color: var(--black);
+}
+
 /* gcal tag in header */
 .gcal-tag {
   font-size: 9px;

@@ -2,6 +2,11 @@
 // REMIND ME — script.js
 // =============================================
 
+// --- PASTE YOUR CREDENTIALS HERE ---
+const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_API_KEY   = 'YOUR_API_KEY';
+// ------------------------------------
+
 // =============================================
 // STATE
 // =============================================
@@ -9,6 +14,9 @@ let reminders   = JSON.parse(localStorage.getItem('rm_reminders') || '[]');
 let isRecording = false;
 let recognition = null;
 let pendingText = '';
+let tokenClient = null;
+let accessToken = null;
+let gapiReady   = false;
 
 // =============================================
 // BOOT
@@ -30,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modalOverlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeModal();
   });
+  document.getElementById('gcalBtn').addEventListener('click', handleGCalAuth);
   document.getElementById('installDismiss').addEventListener('click', () => {
     document.getElementById('installBanner').style.display = 'none';
     localStorage.setItem('rm_install_dismissed', '1');
@@ -38,25 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // =============================================
 // iOS INSTALL BANNER
-// Shows step-by-step how to add to home screen
-// Only on iPhone Safari, only if not already installed
 // =============================================
 function showInstallBanner() {
-  const isIOS        = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  const isInstalled  = window.navigator.standalone === true;
-  const isDismissed  = localStorage.getItem('rm_install_dismissed');
-  const banner       = document.getElementById('installBanner');
-
+  const isIOS       = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isInstalled = window.navigator.standalone === true;
+  const isDismissed = localStorage.getItem('rm_install_dismissed');
+  const banner      = document.getElementById('installBanner');
   if (isIOS && !isInstalled && !isDismissed) {
     banner.style.display = 'flex';
   }
 }
 
 // =============================================
-// VOICE INPUT — tap once to start, tap again to stop
+// VOICE — tap once to start, tap again to stop
 // =============================================
 function initVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SR  = window.SpeechRecognition || window.webkitSpeechRecognition;
   const btn = document.getElementById('voiceBtn');
 
   if (!SR) {
@@ -67,9 +73,9 @@ function initVoice() {
   }
 
   recognition = new SR();
-  recognition.continuous    = false;
+  recognition.continuous     = false;
   recognition.interimResults = true;
-  recognition.lang          = 'en-US';
+  recognition.lang           = 'en-US';
   recognition.maxAlternatives = 1;
 
   recognition.onstart = () => {
@@ -90,9 +96,7 @@ function initVoice() {
     }
   };
 
-  recognition.onspeechend = () => {
-    recognition.stop();
-  };
+  recognition.onspeechend = () => recognition.stop();
 
   recognition.onend = () => {
     isRecording = false;
@@ -108,14 +112,10 @@ function initVoice() {
     isRecording = false;
     btn.classList.remove('recording');
     document.getElementById('voiceLabel').textContent = 'TAP TO SPEAK';
-    if (err.error === 'not-allowed') {
-      showToast('ALLOW MICROPHONE IN SETTINGS');
-    } else if (err.error !== 'no-speech') {
-      showToast('COULD NOT HEAR — TRY AGAIN');
-    }
+    if (err.error === 'not-allowed') showToast('ALLOW MICROPHONE IN SETTINGS');
+    else if (err.error !== 'no-speech') showToast('COULD NOT HEAR — TRY AGAIN');
   };
 
-  // Tap to toggle
   btn.addEventListener('click', () => {
     if (isRecording) {
       recognition.stop();
@@ -125,7 +125,6 @@ function initVoice() {
     }
   });
 
-  // Update label on first load
   document.getElementById('voiceLabel').textContent = 'TAP TO SPEAK';
 }
 
@@ -139,7 +138,6 @@ function parseReminder(raw) {
   const date  = new Date();
   let timeParsed = false;
 
-  // "in X hours and Y minutes"
   const hoursAndMins = lower.match(/in\s+(\d+)\s*hours?\s+(?:and\s+)?(\d+)\s*min/);
   if (hoursAndMins) {
     date.setHours(date.getHours() + +hoursAndMins[1]);
@@ -148,18 +146,15 @@ function parseReminder(raw) {
     timeParsed = true;
   }
 
-  // "in X hours"
   if (!timeParsed) {
     const inH = lower.match(/in\s+(\d+(?:\.\d+)?)\s*hours?/);
     if (inH) {
-      const hrs = parseFloat(inH[1]);
-      date.setMinutes(date.getMinutes() + Math.round(hrs * 60));
+      date.setMinutes(date.getMinutes() + Math.round(parseFloat(inH[1]) * 60));
       title = title.replace(/in\s+[\d.]+\s*hours?/gi, '').trim();
       timeParsed = true;
     }
   }
 
-  // "in X minutes"
   if (!timeParsed) {
     const inM = lower.match(/in\s+(\d+)\s*min/);
     if (inM) {
@@ -169,7 +164,6 @@ function parseReminder(raw) {
     }
   }
 
-  // "in X days"
   if (!timeParsed) {
     const inD = lower.match(/in\s+(\d+)\s*days?/);
     if (inD) {
@@ -179,13 +173,11 @@ function parseReminder(raw) {
     }
   }
 
-  // "tomorrow"
   if (lower.includes('tomorrow')) {
     date.setDate(date.getDate() + 1);
     title = title.replace(/tomorrow/gi, '').trim();
   }
 
-  // "at X:XX am/pm" or "at X am/pm"
   const atMatch = lower.match(/at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
   if (atMatch) {
     let h     = +atMatch[1];
@@ -199,33 +191,24 @@ function parseReminder(raw) {
     timeParsed = true;
   }
 
-  // "tonight" → 8pm
   if (!timeParsed && lower.includes('tonight')) {
     date.setHours(20, 0, 0, 0);
     title = title.replace(/tonight/gi, '').trim();
     timeParsed = true;
   }
-
-  // "this evening" → 7pm
   if (!timeParsed && lower.includes('this evening')) {
     date.setHours(19, 0, 0, 0);
     title = title.replace(/this evening/gi, '').trim();
     timeParsed = true;
   }
-
-  // "this morning" → 9am
   if (!timeParsed && lower.includes('this morning')) {
     date.setHours(9, 0, 0, 0);
     title = title.replace(/this morning/gi, '').trim();
     timeParsed = true;
   }
 
-  // Default: +1 hour
-  if (!timeParsed) {
-    date.setHours(date.getHours() + 1, 0, 0, 0);
-  }
+  if (!timeParsed) date.setHours(date.getHours() + 1, 0, 0, 0);
 
-  // Clean up common prefixes
   title = title
     .replace(/^(remind me to|remind me|remember to|remember|don't forget to|don't forget|please remind me to|i need to|i have to)\s*/gi, '')
     .replace(/\s{2,}/g, ' ')
@@ -247,33 +230,6 @@ function formatDisplay(dateStr) {
 function toDatetimeLocal(date) {
   const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return d.toISOString().slice(0, 16);
-}
-
-// =============================================
-// GOOGLE CALENDAR — no setup needed
-// Builds a pre-filled Google Calendar URL and opens it.
-// User just taps "Save" in Google Calendar. Done.
-// =============================================
-function buildGCalUrl(reminder) {
-  const start = new Date(reminder.date);
-  const end   = new Date(start.getTime() + 60 * 60 * 1000);
-
-  // Format: YYYYMMDDTHHmmssZ
-  const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-  const params = new URLSearchParams({
-    action:  'TEMPLATE',
-    text:    reminder.title,
-    dates:   `${fmt(start)}/${fmt(end)}`,
-    details: 'Added by REMIND ME'
-  });
-
-  return `https://calendar.google.com/calendar/render?${params}`;
-}
-
-function openInGoogleCalendar(reminder) {
-  const url = buildGCalUrl(reminder);
-  window.open(url, '_blank');
 }
 
 // =============================================
@@ -306,10 +262,11 @@ function confirmReminder() {
   if (!timeValue) { showToast('PLEASE SET A TIME');  return; }
 
   const reminder = {
-    id:    Date.now(),
+    id:     Date.now(),
     title,
-    date:  new Date(timeValue).toISOString(),
-    done:  false
+    date:   new Date(timeValue).toISOString(),
+    done:   false,
+    gcalId: null
   };
 
   reminders.push(reminder);
@@ -318,9 +275,13 @@ function confirmReminder() {
   scheduleAlarm(reminder);
   closeModal();
 
-  // Auto-open Google Calendar with event pre-filled
-  openInGoogleCalendar(reminder);
-  showToast('SAVED — TAP "SAVE" IN GOOGLE CALENDAR');
+  if (accessToken && gapiReady) {
+    // Fully automatic — goes straight to Google Calendar, no confirmation needed
+    addToGCal(reminder);
+    showToast('SAVING TO GOOGLE CALENDAR...');
+  } else {
+    showToast('REMINDER SAVED LOCALLY');
+  }
 }
 
 // =============================================
@@ -358,6 +319,7 @@ function renderList(listId, items, emptyMsg) {
       <div class="reminder-content">
         <div class="reminder-title">${esc(r.title)}</div>
         <div class="reminder-time">${formatDisplay(r.date)}</div>
+        ${r.gcalId ? '<div class="reminder-gcal">✓ IN GOOGLE CALENDAR</div>' : ''}
       </div>
       <button class="reminder-delete" onclick="deleteReminder(${r.id})" aria-label="Delete">×</button>
     </div>
@@ -393,7 +355,6 @@ async function requestNotifPerm() {
 function scheduleAlarm(reminder) {
   const delay = new Date(reminder.date) - new Date();
   if (delay <= 0 || delay > 24 * 60 * 60 * 1000) return;
-
   setTimeout(() => {
     const r = reminders.find(r => r.id === reminder.id);
     if (r && !r.done) fire(r);
@@ -409,10 +370,7 @@ function restoreAlarms() {
 function fire(reminder) {
   beep();
   if (Notification.permission === 'granted') {
-    new Notification('REMIND ME', {
-      body: reminder.title,
-      tag:  'rm-' + reminder.id
-    });
+    new Notification('REMIND ME', { body: reminder.title, tag: 'rm-' + reminder.id });
   }
   showToast('⏰ ' + reminder.title.toUpperCase());
 }
@@ -432,6 +390,125 @@ function beep() {
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.55);
   } catch (_) {}
+}
+
+// =============================================
+// GOOGLE CALENDAR API
+// One-time connect → automatic forever after
+// =============================================
+
+// Called automatically when Google API script loads
+function gapiLoaded() {
+  if (GOOGLE_API_KEY === 'YOUR_API_KEY') return;
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      apiKey: GOOGLE_API_KEY,
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
+    });
+    gapiReady = true;
+  });
+}
+
+// Called automatically when Google Sign-In script loads
+function gisLoaded() {
+  if (GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com') return;
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope:     'https://www.googleapis.com/auth/calendar.events',
+    callback:  resp => {
+      if (resp.error) {
+        accessToken = null;
+        localStorage.removeItem('rm_gcal_ok');
+        updateGCalStatus(false);
+        showToast('GOOGLE AUTH FAILED — TRY RECONNECTING');
+        return;
+      }
+      accessToken = resp.access_token;
+      localStorage.setItem('rm_gcal_ok', '1');
+      updateGCalStatus(true);
+    }
+  });
+
+  // If user already connected before, silently reconnect — no popup
+  if (localStorage.getItem('rm_gcal_ok')) {
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
+}
+
+function handleGCalAuth() {
+  if (GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com') {
+    showToast('PASTE YOUR GOOGLE CLIENT ID FIRST');
+    return;
+  }
+  if (!tokenClient) { showToast('LOADING GOOGLE...'); return; }
+
+  if (accessToken) {
+    // Disconnect
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      localStorage.removeItem('rm_gcal_ok');
+      updateGCalStatus(false);
+    });
+  } else {
+    // First-time connect — shows Google login popup
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+}
+
+function updateGCalStatus(connected) {
+  const btn    = document.getElementById('gcalBtn');
+  const status = document.getElementById('gcalStatus');
+  const notice = document.getElementById('gcalNotice');
+
+  if (connected) {
+    status.textContent = 'GOOGLE CONNECTED ✓';
+    btn.classList.add('connected');
+    if (notice) notice.style.display = 'none';
+  } else {
+    status.textContent = 'CONNECT GOOGLE CALENDAR';
+    btn.classList.remove('connected');
+    if (notice) notice.style.display = 'block';
+  }
+}
+
+async function addToGCal(reminder) {
+  if (!accessToken || !gapiReady) return;
+  try {
+    gapi.client.setToken({ access_token: accessToken });
+
+    const start = new Date(reminder.date);
+    const end   = new Date(start.getTime() + 60 * 60 * 1000);
+
+    const res = await gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: {
+        summary: reminder.title,
+        start:   { dateTime: start.toISOString() },
+        end:     { dateTime: end.toISOString() },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'popup', minutes: 0 },
+            { method: 'popup', minutes: 5 }
+          ]
+        }
+      }
+    });
+
+    const r = reminders.find(r => r.id === reminder.id);
+    if (r) { r.gcalId = res.result.id; save(); renderAll(); }
+    showToast('✓ ADDED TO GOOGLE CALENDAR');
+  } catch (err) {
+    console.error('GCal error:', err);
+    // Token may have expired — try to refresh silently
+    if (err.status === 401 && tokenClient) {
+      tokenClient.requestAccessToken({ prompt: '' });
+      showToast('RECONNECTING TO GOOGLE...');
+    } else {
+      showToast('GOOGLE CALENDAR ERROR');
+    }
+  }
 }
 
 // =============================================

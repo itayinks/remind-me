@@ -16,12 +16,12 @@
 </head>
 <body>
 
-  <!-- iOS INSTALL BANNER — only shows in Safari before adding to home screen -->
+  <!-- iOS INSTALL BANNER -->
   <div class="install-banner" id="installBanner" style="display:none;">
     <div class="install-banner-content">
       <div class="install-steps">
         <span class="install-title">ADD TO YOUR HOME SCREEN</span>
-        <span class="install-step">1 · Tap the <strong>Share</strong> button below <span class="install-icon">⎙</span></span>
+        <span class="install-step">1 · Tap the <strong>Share</strong> button at the bottom <span class="install-icon">⎙</span></span>
         <span class="install-step">2 · Scroll and tap <strong>"Add to Home Screen"</strong></span>
         <span class="install-step">3 · Tap <strong>Add</strong> — done!</span>
       </div>
@@ -33,11 +33,20 @@
   <header class="app-header">
     <div class="header-top">
       <span class="app-tag">YOUR MEMORY</span>
-      <span class="gcal-tag">GOOGLE CALENDAR READY</span>
+      <button class="gcal-btn" id="gcalBtn">
+        <span id="gcalStatus">CONNECT GOOGLE CALENDAR</span>
+      </button>
     </div>
     <h1 class="app-title">REMIND<br>ME</h1>
     <p class="app-subtitle">SPEAK &nbsp;·&nbsp; REMEMBER &nbsp;·&nbsp; DO</p>
   </header>
+
+  <!-- GOOGLE CONNECT NOTICE — shown when not connected -->
+  <div class="gcal-notice" id="gcalNotice">
+    <p class="gcal-notice-text">
+      Tap <strong>CONNECT GOOGLE CALENDAR</strong> above to auto-save reminders to your Google Calendar — you only need to do this once.
+    </p>
+  </div>
 
   <!-- VOICE SECTION -->
   <section class="voice-section">
@@ -56,24 +65,18 @@
     <p class="voice-label" id="voiceLabel">TAP TO SPEAK</p>
     <p class="voice-transcript" id="voiceTranscript"></p>
 
-    <!-- Manual fallback -->
     <div class="manual-section">
       <div class="or-divider"><span>OR TYPE IT</span></div>
       <div class="manual-row">
-        <input
-          type="text"
-          class="manual-input"
-          id="manualInput"
+        <input type="text" class="manual-input" id="manualInput"
           placeholder="e.g. Call mom in 2 hours"
-          autocomplete="off"
-          autocorrect="off"
-        >
+          autocomplete="off" autocorrect="off">
         <button class="add-btn" id="addBtn">ADD</button>
       </div>
     </div>
   </section>
 
-  <!-- TODAY'S REMINDERS -->
+  <!-- TODAY -->
   <section class="reminders-section">
     <div class="section-header">
       <h2 class="section-title">TODAY</h2>
@@ -84,7 +87,7 @@
     </div>
   </section>
 
-  <!-- UPCOMING REMINDERS -->
+  <!-- UPCOMING -->
   <section class="reminders-section">
     <div class="section-header">
       <h2 class="section-title">UPCOMING</h2>
@@ -114,12 +117,14 @@
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-cancel" id="modalCancel">CANCEL</button>
-        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE + OPEN GOOGLE</button>
+        <button class="modal-btn modal-confirm" id="modalConfirm">SAVE REMINDER</button>
       </div>
     </div>
   </div>
 
   <script src="script.js"></script>
+  <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async></script>
+  <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async></script>
 
 </body>
 </html>
